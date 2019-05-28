@@ -7,8 +7,8 @@ This repository contains the source code of our paper, [Structured Knowledge Dis
 Demo video for the student net on Camvid
 
 
- ![image]( https://github.com/ljheee/HexTransform/blob/master/abc.jpg)
-  ![image]( https://github.com/ljheee/HexTransform/blob/master/abc.jpg)
+ ![image]( https://github.com/irfanICMLL/structure_knowledge_distillation/blob/master/demo/output_base_esp.gif)
+  ![image]( https://github.com/irfanICMLL/structure_knowledge_distillation/blob/master/demo/output_sd_esp.gif)
 
 
 ## Structure of this repository
