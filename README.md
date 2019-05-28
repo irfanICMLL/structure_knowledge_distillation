@@ -4,77 +4,66 @@ This repository contains the source code of our paper, [Structured Knowledge Dis
 
 ## Sample results
 
-Demo video for the student net on Camvid
+Demo video for the student net (ESPNet) on Camvid
 
+After distillation with mIoU 65.1:
+![image]( https://github.com/irfanICMLL/structure_knowledge_distillation/blob/master/demo/output_sd_esp.gif)
 
- ![image]( https://github.com/irfanICMLL/structure_knowledge_distillation/blob/master/demo/output_base_esp.gif)
-  ![image]( https://github.com/irfanICMLL/structure_knowledge_distillation/blob/master/demo/output_sd_esp.gif)
+Before distillation with mIoU 57.8:
+![image]( https://github.com/irfanICMLL/structure_knowledge_distillation/blob/master/demo/output_base_esp.gif)
+  
+
 
 
 ## Structure of this repository
 This repository is organized as:
-* [train](/train/) This directory contains the source code for trainig the ESPNet-C and ESPNet models.
-* [test](/test/) This directory contains the source code for evaluating our model on RGB Images.
-* [pretrained](/pretrained/) This directory contains the pre-trained models on the CityScape dataset
-  * [encoder](/pretrained/encoder/) This directory contains the pretrained **ESPNet-C** models
-  * [decoder](/pretrained/decoder/) This directory contains the pretrained **ESPNet** models
-
-
-## Performance on the CityScape dataset
-
-Our model ESPNet achives an class-wise mIOU of **60.336** and category-wise mIOU of **82.178** on the CityScapes test dataset and runs at 
-* 112 fps on the NVIDIA TitanX (30 fps faster than [ENet](https://arxiv.org/abs/1606.02147))
-* 9 FPS on TX2
-* With the same number of parameters as [ENet](https://arxiv.org/abs/1606.02147), our model is **2%** more accurate
+* [config](/config/) This directory contains the settings.
+* [dataset](/dataset/) This directory contains the dataloader for different datasets.
+* [network](/network/) This directory contains a model zoo for different seg models.
+* [utils](/utils/) This directory contains api for calculating the distillation loss and evaluate the results.
 
 ## Performance on the CamVid dataset
+We apply the distillation method to training the [ESPnet](https://github.com/sacmehta/ESPNet) and achieves an mIoU of 65.1 on the CamVid test set. We used the dataset splits (train/val/test) provided [here](https://github.com/alexgkendall/SegNet-Tutorial). We trained the models at a resolution of 480x360.
 
-Our model achieves an mIOU of 55.64 on the CamVid test set. We used the dataset splits (train/val/test) provided [here](https://github.com/alexgkendall/SegNet-Tutorial). We trained the models at a resolution of 480x360. For comparison  with other models, see [SegNet paper](https://ieeexplore.ieee.org/document/7803544/).
+Note: We use 2000 more unlabel data as described in our paper.
 
-Note: We did not use the 3.5K dataset for training which was used in the SegNet paper.
-
-| Model | mIOU | Class avg. | 
+| Model | mIOU | 
 | -- | -- | -- |
-| ENet | 51.3 | 68.3 | 
-| SegNet | 55.6 | 65.2 | 
-| ESPNet | 55.64 | 68.30 | 
+| ESPNet_base | 57.8 |
+| ESPNet_ours | 61.4 |
+| ESPNet_ours+unlabel data | 65.1 |
 
-## Pre-requisite
 
-To run this code, you need to have following libraries:
-* [OpenCV](https://opencv.org/) - We tested our code with version > 3.0.
-* [PyTorch](http://pytorch.org/) - We tested with v0.3.0
-* Python - We tested our code with Pythonv3. If you are using Python v2, please feel free to make necessary changes to the code. 
-
+## Requirement
+python3.5 
+pytorch0.41 
+ninja 
+numpy 
+cv2 
+Pillow
+You can also use this [docker](https://hub.docker.com/r/rainbowsecret/pytorch04/tags/)
 We recommend to use [Anaconda](https://conda.io/docs/user-guide/install/linux.html). We have tested our code on Ubuntu 16.04.
 
+## Quick start to eval the model
+1. download the [Camvid dataset](https://github.com/alexgkendall/SegNet-Tutorial)
+2.python eval_esp.py --method student_esp_d --dataset camvid_light --data_list $PATH_OF_THE_TEST_LIST --data_dir $PATH_OF_THE_TEST_DATA --num_classes 11 --restore-from $PATH_OF_THE_PRETRAIN_MODEL --store-output False
+
+##Model Zoo
+Pretrain models can be found in the folder [checkpoint](/checkpoint/)
+
+
+
 ## Citation
-If ESPNet is useful for your research, then please cite our paper.
+If this code is useful for your research, then please cite our paper.
 ```
-@inproceedings{mehta2018espnet,
-  title={ESPNet: Efficient Spatial Pyramid of Dilated Convolutions for Semantic Segmentation},
-  author={Sachin Mehta, Mohammad Rastegari, Anat Caspi, Linda Shapiro, and Hannaneh Hajishirzi},
-  booktitle={ECCV},
-  year={2018}
+@inproceedings{liu2019structured,
+  title={Structured Knowledge Distillation for Semantic Segmentation},
+  author={Liu, Yifan and Chen, Ke and Liu, Chris and Qin, Zengchang and Luo, Zhenbo and Wang, Jingdong},
+  journal={CVPR},
+  year={2019}
 }
 ```
 
 
-## FAQs
-
-### Assertion error with class labels (t >= 0 && t < n_classes).
-
-If you are getting an assertion error with class labels, then please check the number of class labels defined in the label images. You can do this as:
-
-```
-import cv2
-import numpy as np
-labelImg = cv2.imread(<label_filename.png>, 0)
-unique_val_arr = np.unique(labelImg)
-print(unique_val_arr)
-```
-The values inside *unique_val_arr* should be between 0 and total number of classes in the dataset. If this is not the case, then pre-process your label images. For example, if the label iamge contains 255 as a value, then you can ignore these values by mapping it to an undefined or background class as:
-
-```
-labelImg[labelImg == 255] = <undefined class id>
-```
+## Train script
+Coming soon
