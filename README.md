@@ -48,7 +48,7 @@ We recommend to use [Anaconda](https://conda.io/docs/user-guide/install/linux.ht
 1. download the [Camvid dataset](https://github.com/alexgkendall/SegNet-Tutorial)
 2.python eval_esp.py --method student_esp_d --dataset camvid_light --data_list $PATH_OF_THE_TEST_LIST --data_dir $PATH_OF_THE_TEST_DATA --num_classes 11 --restore-from $PATH_OF_THE_PRETRAIN_MODEL --store-output False
 
-##Model Zoo
+## Model Zoo
 Pretrain models can be found in the folder [checkpoint](/checkpoint/)
 
 
