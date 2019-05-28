@@ -28,7 +28,7 @@ We apply the distillation method to training the [ESPnet](https://github.com/sac
 Note: We use 2000 more unlabel data as described in our paper.
 
 | Model | mIOU | 
-| -- | -- | -- |
+| --  | -- |
 | ESPNet_base | 57.8 |
 | ESPNet_ours | 61.4 |
 | ESPNet_ours+unlabel data | 65.1 |
