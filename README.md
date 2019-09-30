@@ -39,8 +39,8 @@ Pretrain models for three tasks can be found here:
 | -- | -- |-- | -- |-- |-- |
 | Semantic Segmentation |Cityscapes| ResNet18|Baseline|miou: 69.10 |-|
 | Semantic Segmentation |Cityscapes| ResNet18|+ our distillation|miou: 75.3 |[link](https://cloudstor.aarnet.edu.au/plus/s/uL3qO51A4qxY6Eu) |
-| Object Detection |COCO(https://github.com/tianzhi0549/FCOS.git)| FCOS-MV2-C128|Baseline|mAP: 30.9 |-|
-| Object Detection |COCO(https://github.com/tianzhi0549/FCOS.git)| FCOS-MV2-C128|+ our distillation|mAP: 34.0 |[link](https://cloudstor.aarnet.edu.au/plus/s/Hqq9HSI8GXrR0b0) |
+| Object Detection |COCO| [FCOS-MV2-C128](https://github.com/tianzhi0549/FCOS.git)|Baseline|mAP: 30.9 |-|
+| Object Detection |COCO|  [FCOS-MV2-C128](https://github.com/tianzhi0549/FCOS.git)|+ our distillation|mAP: 34.0 |[link](https://cloudstor.aarnet.edu.au/plus/s/Hqq9HSI8GXrR0b0) |
 | Depth estimation |nyudv2| [VNL](https://github.com/YvanYin/VNL_Monocular_Depth_Prediction.git)|baseline|rel: 13.5 |-|
 | Depth estimation | nyudv2|[VNL](https://github.com/YvanYin/VNL_Monocular_Depth_Prediction.git)|+ our distillation|rel: 13.0 |[link](https://cloudstor.aarnet.edu.au/plus/s/IXk0i0cJaibgJAr)|
 
