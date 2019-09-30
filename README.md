@@ -36,7 +36,7 @@ Pi: Pixel-wise distillation PA: Pair-wise distillation HO: holistic distillation
 Pretrain models for three tasks can be found here:
 
 | Task |Dataset| Network |Method | Evaluation Metric|Link|
-| -- | -- |
+| -- | -- |-- | -- |-- |-- |
 | Semantic Segmentation |Cityscapes| ResNet18|Baseline|miou: 69.10 |-|
 | Semantic Segmentation |Cityscapes| ResNet18|+ our distillation|miou: 75.3 |[link](https://cloudstor.aarnet.edu.au/plus/s/uL3qO51A4qxY6Eu) |
 | Object Detection |COCO(https://github.com/tianzhi0549/FCOS.git)| FCOS-MV2-C128|Baseline|mAP: 30.9 |-|
