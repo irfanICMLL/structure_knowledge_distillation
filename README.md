@@ -35,7 +35,7 @@ Pi: Pixel-wise distillation PA: Pair-wise distillation HO: holistic distillation
 ## Pre-trained model and Performance on other tasks
 Pretrain models for three tasks can be found here:
 
-| Task |Dataset| Network |Method | Evaluation Metric|Link
+| Task |Dataset| Network |Method | Evaluation Metric|Link|
 | -- | -- |
 | Semantic Segmentation |Cityscapes| ResNet18|Baseline|miou: 69.10 |-|
 | Semantic Segmentation |Cityscapes| ResNet18|+ our distillation|miou: 75.3 |[link](https://cloudstor.aarnet.edu.au/plus/s/uL3qO51A4qxY6Eu) |
@@ -60,7 +60,7 @@ We recommend to use [Anaconda](https://conda.io/docs/user-guide/install/linux.ht
 1. download the [Cityscape dataset](https://www.cityscapes-dataset.com/)
 2. sh run_test.sh [you should change the data-dir to your own]. By using our distilled student model, which can be gotten in [ckpt], an mIoU of 73.05 is achieved on the Cityscape test set, and 75.3 on validation set.
 
-| Model | Average | roda | sidewalk | building	wall | fence | pole | trafficlight | trafficsign | vegetation | terrain | sky | person | rider | car | truck | bus | train | motorcycle | bicycle |
+| Model | Average | roda | sidewalk | building|	wall | fence | pole | trafficlight | trafficsign | vegetation | terrain | sky | person | rider | car | truck | bus | train | motorcycle | bicycle |
 | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
 | IoU | 73.05 | 97.57 | 78.80 | 91.42 | 50.76 | 50.88 | 60.77 | 67.93 | 73.18 | 92.49 | 70.36 | 94.56 | 82.81 | 61.64 | 94.89 | 60.14 | 66.62 | 59.93 | 61.50 | 71.71 |
 
