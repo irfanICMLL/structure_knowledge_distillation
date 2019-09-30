@@ -1,224 +1,183 @@
-from PIL import Image
-import numpy as np
-import torch
+from collections import OrderedDict
+import logging
+import os
 import pdb
+import platform
+import shutil
+import sys
+import time
+import torch
+from tensorboardX import SummaryWriter
 
-# colour map
-label_colours = [(0, 0, 0)
-                 # 0=background
-    , (128, 0, 0), (0, 128, 0), (128, 128, 0), (0, 0, 128), (128, 0, 128)
-                 # 1=aeroplane, 2=bicycle, 3=bird, 4=boat, 5=bottle
-    , (0, 128, 128), (128, 128, 128), (64, 0, 0), (192, 0, 0), (64, 128, 0)
-                 # 6=bus, 7=car, 8=cat, 9=chair, 10=cow
-    , (192, 128, 0), (64, 0, 128), (192, 0, 128), (64, 128, 128), (192, 128, 128)
-                 # 11=diningtable, 12=dog, 13=horse, 14=motorbike, 15=person
-    , (0, 64, 0), (128, 64, 0), (0, 192, 0), (128, 192, 0), (0, 64, 128)]
-
-
-# 16=potted plant, 17=sheep, 18=sofa, 19=train, 20=tv/monitor
-
-def decode_labels(mask, num_images=1, num_classes=21):
-    """Decode batch of segmentation masks.
-
-    Args:
-      mask: result of inference after taking argmax.
-      num_images: number of images to decode from the batch.
-      num_classes: number of classes to predict (including background).
-
-    Returns:
-      A batch with num_images RGB images of the same size as the input.
-    """
-    mask = mask.data.cpu().numpy()
-    n, h, w = mask.shape
-    assert (n >= num_images), 'Batch size %d should be greater or equal than number of images to save %d.' % (
-    n, num_images)
-    outputs = np.zeros((num_images, h, w, 3), dtype=np.uint8)
-    for i in range(num_images):
-        img = Image.new('RGB', (len(mask[i, 0]), len(mask[i])))
-        pixels = img.load()
-        for j_, j in enumerate(mask[i, :, :]):
-            for k_, k in enumerate(j):
-                if k < num_classes:
-                    pixels[k_, j_] = label_colours[k]
-        outputs[i] = np.array(img)
-    return outputs
-
-
-def decode_predictions(preds, num_images=1, num_classes=21):
-    """Decode batch of segmentation masks.
-
-    Args:
-      mask: result of inference after taking argmax.
-      num_images: number of images to decode from the batch.
-      num_classes: number of classes to predict (including background).
-
-    Returns:
-      A batch with num_images RGB images of the same size as the input.
-    """
-    if isinstance(preds, list):
-        preds_list = []
-        for pred in preds:
-            preds_list.append(pred[-1].data.cpu().numpy())
-        preds = np.concatenate(preds_list, axis=0)
+def to_tuple_str(str_first, gpu_num, str_ind):
+    if gpu_num > 1:
+        tmp = '(' 
+        for cpu_ind in range(gpu_num):
+            tmp += '(' + str_first + '[' + str(cpu_ind) + ']' + str_ind +',)'  
+            if cpu_ind != gpu_num-1: tmp +=  ', '
+        tmp += ')'
     else:
-        preds = preds.data.cpu().numpy()
+        tmp = str_first + str_ind  
+    return tmp
 
-    preds = np.argmax(preds, axis=1)
-    n, h, w = preds.shape
-    assert (n >= num_images), 'Batch size %d should be greater or equal than number of images to save %d.' % (
-    n, num_images)
-    outputs = np.zeros((num_images, h, w, 3), dtype=np.uint8)
-    for i in range(num_images):
-        img = Image.new('RGB', (len(preds[i, 0]), len(preds[i])))
-        pixels = img.load()
-        for j_, j in enumerate(preds[i, :, :]):
-            for k_, k in enumerate(j):
-                if k < num_classes:
-                    pixels[k_, j_] = label_colours[k]
-        outputs[i] = np.array(img)
-    return outputs
+def to_cat_str(str_first, gpu_num, str_ind, dim_):
+    if gpu_num > 1:
+        tmp = 'torch.cat((' 
+        for cpu_ind in range(gpu_num):
+            tmp += str_first + '[' + str(cpu_ind) + ']' + str_ind  
+            if cpu_ind != gpu_num-1: tmp +=  ', '
+        tmp += '), dim=' + str(dim_) + ')'
+    else:
+        tmp = str_first + str_ind  
+    return tmp
 
+def to_tuple(list_data, gpu_num, sec_ind):
+    out = (list_data[0][sec_ind],)
+    for ind in range(1,gpu_num):
+        out += (list_data[ind][sec_ind],)
+    return out
 
-def inv_preprocess(imgs, num_images, img_mean):
-    """Inverse preprocessing of the batch of images.
-       Add the mean vector and convert from BGR to RGB.
+def log_init(log_dir, name='log'):
+    time_cur = time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime())
+    if os.path.exists(log_dir) == False:
+        os.makedirs(log_dir)
+    logging.basicConfig(filename=log_dir + '/' + name + '_' + str(time_cur) + '.log',
+                        format='%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s',
+                        level=logging.DEBUG)
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(levelname)-8s %(message)s')
+    console.setFormatter(formatter)
+    logging.getLogger('').addHandler(console)
 
-    Args:
-      imgs: batch of input images.
-      num_images: number of images to apply the inverse transformations on.
-      img_mean: vector of mean colour values.
+def write_tensorboder_logger(logger_path, epoch, **info):
+    if os.path.exists(logger_path) == False:
+        os.makedirs(logger_path)
+    writer = SummaryWriter(logger_path)
+    writer.add_scalars('accuracy',{'train_accuracy': info['train_accuracy'], 'test_accuracy': info['test_accuracy']}, epoch)
+    for tag, value in info.items():
+        if tag not in ['train_accuracy', 'test_accuracy']:
+            writer.add_scalar(tag, value, epoch)
+    writer.close()
 
-    Returns:
-      The batch of the size num_images with the same spatial dimensions as the input.
-    """
-    imgs = imgs.data.cpu().numpy()
-    n, c, h, w = imgs.shape
-    assert (n >= num_images), 'Batch size %d should be greater or equal than number of images to save %d.' % (
-    n, num_images)
-    outputs = np.zeros((num_images, h, w, c), dtype=np.uint8)
-    for i in range(num_images):
-        outputs[i] = (np.transpose(imgs[i], (1, 2, 0)) + img_mean).astype(np.uint8)
-    return outputs
+def save_arg(args):
+    l = len(args.S_ckpt_path.split('/')[-1])
+    path = args.S_ckpt_path[:-l]
+    if not os.path.exists(path):
+        os.makedirs(path)
+    f = open(path + 'args.txt', 'w+')
+    for key, val in args._get_kwargs():
+        f.write(key + ' : ' + str(val)+'\n')
+    f.close()
 
+def load_T_model(model, ckpt_path):
+    logging.info("------------")
+    if os.path.exists(ckpt_path):
+        saved_state_dict = torch.load(ckpt_path)
+        new_params = model.state_dict().copy()
+        for i in saved_state_dict:
+            i_parts = i.split('.')
+            if not i_parts[0]=='fc':
+                if '.'.join(i_parts)[:7]=='head.0.':
+                    new_params['pspmodule.'+'.'.join(i_parts)[7:]] = saved_state_dict[i] 
+                elif '.'.join(i_parts)[:7]=='head.1.':
+                    new_params['head.'+'.'.join(i_parts)[7:]] = saved_state_dict[i] 
+                else:
+                    new_params['.'.join(i_parts[0:])] = saved_state_dict[i] 
+        model.load_state_dict(new_params)
+        logging.info("load" + str(ckpt_path))
+    else:
+        logging.info("=> no teacher ckpt find")
+    logging.info("------------")
 
-def reshape_predict_target(predict, target):
-    # get all the valid prediction vectors and label vectors.
-    assert not target.requires_grad
-    assert predict.dim() == 4
-    assert target.dim() == 3
-    assert predict.size(0) == target.size(0), "{0} vs {1} ".format(predict.size(0), target.size(0))
-    assert predict.size(2) == target.size(1), "{0} vs {1} ".format(predict.size(2), target.size(1))
-    assert predict.size(3) == target.size(2), "{0} vs {1} ".format(predict.size(3), target.size(3))
-    n, c, h, w = predict.size()
+def load_S_model(args, model, with_module = True):
+    logging.info("------------")
+    if not os.path.exists(args.S_ckpt_path):
+        os.makedirs(args.S_ckpt_path)
+    if args.is_student_load_imgnet:
+        if os.path.isfile(args.student_pretrain_model_imgnet):
+            saved_state_dict=torch.load(args.student_pretrain_model_imgnet)
+            new_params=model.state_dict()
+            saved_state_dict = {k: v for k, v in saved_state_dict.items() if k in new_params}
+            new_params.update(saved_state_dict)
+            model.load_state_dict(new_params)
+            logging.info("=> load" + str(args.student_pretrain_model_imgnet))
+        else:
+            logging.info("=> the pretrain model on imgnet '{}' does not exit".format(args.student_pretrain_model_imgnet))
+    else:
+        if args.S_resume:
+            file = args.S_ckpt_path + '/model_best.pth.tar'
+            if os.path.isfile(file):
+                checkpoint = torch.load(file)
+                args.last_step = checkpoint['step'] if 'step' in checkpoint else None
+                args.start_epoch = checkpoint['epoch'] if 'epoch' in checkpoint else None
+                args.best_mean_IU = checkpoint['best_mean_IU'] if 'best_mean_IU' in checkpoint else None
+                best_IU_array = checkpoint['IU_array'] if 'IU_array' in checkpoint else None
+                state_dict = checkpoint['state_dict']
+                new_state_dict = OrderedDict()
+                if with_module == False:
+                    new_state_dict = {k[7:]: v for k,v in state_dict.items()}
+                else:
+                    new_state_dict = state_dict
+                model.load_state_dict(new_state_dict)
+                logging.info("=> loaded checkpoint '{}' \n (epoch:{} step:{} best_mean_IU:{} \n )".format(
+                    file, args.start_epoch, args.last_step, args.best_mean_IU, best_IU_array))
+                logging.info("the best student accuracy is: %.3f", args.best_mean_IU)
+            else:
+                logging.info("=> checkpoint '{}' does not exit".format(file))
+    logging.info("------------")
 
-    ntarget = target.data.cpu().numpy()
-    cls_ids = np.unique(ntarget)
+def load_D_model(args, model, with_module = True):
+    logging.info("------------")
+    if args.D_resume:
+        if not os.path.exists(args.D_ckpt_path):
+            os.makedirs(args.D_ckpt_path)
+        file = args.D_ckpt_path + '/model_best.pth.tar'
+        if os.path.isfile(file):
+            checkpoint = torch.load(file)
+            args.start_epoch = checkpoint['epoch']
+            args.best_mean_IU = checkpoint['best_mean_IU']
+            state_dict = checkpoint['state_dict']
+            new_state_dict = OrderedDict()
+            if with_module == False:
+                new_state_dict = {k[7:]: v for k,v in state_dict.items()}
+            else:
+                new_state_dict = state_dict
+            model.load_state_dict(new_state_dict)
+            logging.info("=> loaded checkpoint '{}' (epoch {})".format(
+                file, checkpoint['epoch']))
+        else:
+            logging.info("=> checkpoint '{}' does not exit".format(file))
+    logging.info("------------")
 
-    # get all the valid class label list
-    cls_ids = cls_ids[cls_ids != 255]
-    cls_ids = [cls_id for cls_id in cls_ids if np.sum(ntarget == cls_id) > 20]
-    # cls_ids = torch.from_numpy(np.array(cls_ids))
+def save_checkpoint(state, is_best, fdir):
+    filepath = os.path.join(fdir, 'checkpoint.pth')
+    torch.save(state, filepath)
+    if is_best:
+        shutil.copyfile(filepath, os.path.join(fdir, 'model_best.pth.tar'))
 
-    input_feature = predict.view(-1, c)
-    input_label = target.view(-1)
+def get_learning_rate(optimizer):
+    for param_group in optimizer.param_groups:
+        lr = param_group['lr']
+    return lr
 
-    index = [i for i in range(input_label.size(0)) if input_label[i].data.cpu().numpy() in cls_ids]
+def print_model_parm_nums(model, string):
+    b = []
+    for param in model.parameters():
+        b.append(param.numel())
+    logging.info(string + ': Number of params: %.2fM', sum(b) / 1e6)
 
-    input_feature = input_feature[index, :]
-    input_label = input_label[index]
+def L2(f_):
+    return (((f_**2).sum(dim=1))**0.5).reshape(f_.shape[0],1,f_.shape[2],f_.shape[3]) + 1e-8
 
-    return input_feature, input_label
+def similarity(feat):
+    feat = feat.float()
+    tmp = L2(feat).detach()
+    feat = feat/tmp
+    feat = feat.reshape(feat.shape[0],feat.shape[1],-1)
+    return torch.einsum('icm,icn->imn', [feat, feat])
 
-
-# def down_sample_target(target, input_scale, output_scale):
-def down_sample_target(target, scale):
-    # pdb.set_trace()
-    n, row, col = target.size(0), target.size(1), target.size(2)
-    step = scale
-    r_target = target[:, 0:row:step, :]
-    # r_target = torch.cat((r_target, target[:, row-1, :]), 1) #here deal with the special case, need to add one more row and one more col
-    c_target = r_target[:, :, 0:col:step]
-    # c_target = torch.cat((c_target, r_target[:, :, col-1]), 2)
-    return c_target
-
-
-def _quick_countless(data):
-    """
-    Vectorized implementation of downsampling a 2D
-    image by 2 on each side using the COUNTLESS algorithm.
-
-    data is a 2D numpy array with even dimensions.
-    """
-    sections = []
-
-    # This loop splits the 2D array apart into four arrays that are
-    # all the result of striding by 2 and offset by (0,0), (0,1), (1,0),
-    # and (1,1) representing the A, B, C, and D positions from Figure 1.
-    factor = (2, 2)
-    for offset in np.ndindex(factor):
-        part = data[tuple(np.s_[o::f] for o, f in zip(offset, factor))]
-        sections.append(part)
-
-    a, b, c, d = sections
-
-    ab_ac = a * ((a == b) | (a == c))  # PICK(A,B) || PICK(A,C) w/ optimization
-    bc = b * (b == c)  # PICK(B,C)
-
-    a = ab_ac | bc  # (PICK(A,B) || PICK(A,C)) or PICK(B,C)
-    return a + (a == 0) * d  # AB || AC || BC || D
-
-
-def _zero_corrected_countless(data):
-    """
-    Vectorized implementation of downsampling a 2D
-    image by 2 on each side using the COUNTLESS algorithm.
-
-    data is a 2D numpy array with even dimensions.
-    """
-    # allows us to prevent losing 1/2 a bit of information
-    # at the top end by using a bigger type. Without this 255 is handled incorrectly.
-    # data, upgraded = upgrade_type(data)
-    # offset from zero, raw countless doesn't handle 0 correctly
-    # we'll remove the extra 1 at the end.
-    data += 1
-
-    sections = []
-
-    # This loop splits the 2D array apart into four arrays that are
-    # all the result of striding by 2 and offset by (0,0), (0,1), (1,0),
-    # and (1,1) representing the A, B, C, and D positions from Figure 1.
-    factor = (2, 2)
-    for offset in np.ndindex(factor):
-        part = data[tuple(np.s_[o::f] for o, f in zip(offset, factor))]
-        sections.append(part)
-
-    a, b, c, d = sections
-
-    ab = a * (a == b)  # PICK(A,B)
-    ac = a * (a == c)  # PICK(A,C)
-    bc = b * (b == c)  # PICK(B,C)
-
-    a = ab | ac | bc  # Bitwise OR, safe b/c non-matches are zeroed
-
-    result = a + (a == 0) * d - 1  # a or d - 1
-
-    # if upgraded:
-    #   return downgrade_type(result)
-    # only need to reset data if we weren't upgraded
-    # b/c no copy was made in that case
-    data -= 1
-    return result
-
-
-def down_sample_target_count(target, scale=2):
-    # pdb.set_trace()
-    _target = target.data.cpu().numpy()
-    _target = _zero_corrected_countless(_target)
-    if scale == 4:
-        _target = _zero_corrected_countless(_target)
-    elif scale == 8:
-        _target = _zero_corrected_countless(_target)
-        _target = _zero_corrected_countless(_target)
-    # pdb.set_trace()
-    return torch.from_numpy(_target)
-
+def sim_dis_compute(f_S, f_T):
+    sim_err = ((similarity(f_T) - similarity(f_S))**2)/((f_T.shape[-1]*f_T.shape[-2])**2)/f_T.shape[0]
+    sim_dis = sim_err.sum()
+    return sim_dis
