@@ -8,7 +8,7 @@ It is an extension of our paper [Structured Knowledge Distillation for Semantic 
 Demo video for the student net (ESPNet) on Camvid
 
 After distillation with mIoU 65.1:
-![image]( https://github.com/irfanICMLL/structure_knowledge_distillation/blob/master/demo/output_sd_esp.gif)
+![image](https://github.com/irfanICMLL/structure_knowledge_distillation/blob/master/demo/output_sd_esp.gif)
 
 Before distillation with mIoU 57.8:
 ![image]( https://github.com/irfanICMLL/structure_knowledge_distillation/blob/master/demo/output_base_esp.gif)
@@ -32,6 +32,21 @@ Pi: Pixel-wise distillation PA: Pair-wise distillation HO: holistic distillation
 | +Pi+Pa | 71.78 |
 | +Pi+Pa+Ho | 74.08 |
 
+## Pre-trained model and Performance on other tasks
+Pretrain models for three tasks can be found here:
+
+| Task |Dataset| Network |Method | Evaluation Metric|Link
+| -- | -- |
+| Semantic Segmentation |Cityscapes| ResNet18|Baseline|miou: 69.10 |-|
+| Semantic Segmentation |Cityscapes| ResNet18|+ our distillation|miou: 75.3 |[link](https://cloudstor.aarnet.edu.au/plus/s/uL3qO51A4qxY6Eu) |
+| Object Detection |COCO(https://github.com/tianzhi0549/FCOS.git)| FCOS-MV2-C128|Baseline|mAP: 30.9 |-|
+| Object Detection |COCO(https://github.com/tianzhi0549/FCOS.git)| FCOS-MV2-C128|+ our distillation|mAP: 34.0 |[link](https://cloudstor.aarnet.edu.au/plus/s/Hqq9HSI8GXrR0b0) |
+| Depth estimation |nyudv2| [VNL](https://github.com/YvanYin/VNL_Monocular_Depth_Prediction.git)|baseline|rel: 13.5 |-|
+| Depth estimation | nyudv2|[VNL](https://github.com/YvanYin/VNL_Monocular_Depth_Prediction.git)|+ our distillation|rel: 13.0 |[link](https://cloudstor.aarnet.edu.au/plus/s/IXk0i0cJaibgJAr)|
+
+Note: Other chcekpoints can be obtained by email: yifan.liu04@adelaide.edu.au if needed.
+
+
 ## Requirement
 python3.5 
 pytorch0.4.1 
@@ -49,9 +64,7 @@ We recommend to use [Anaconda](https://conda.io/docs/user-guide/install/linux.ht
 | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
 | IoU | 73.05 | 97.57 | 78.80 | 91.42 | 50.76 | 50.88 | 60.77 | 67.93 | 73.18 | 92.49 | 70.36 | 94.56 | 82.81 | 61.64 | 94.89 | 60.14 | 66.62 | 59.93 | 61.50 | 71.71 |
 
-## Model Zoo
-Pretrain models can be found in the folder [checkpoint](/checkpoint/)
-
+Note: Depth estimation task and object detection task can be test through the original projects of VNL and FCOS using our checkpoints.
 ## Train script
 If you want to reproduce the ablation study in our paper, please modify is_pi_use/is_pa_use/is_ho_use in the run_train_eval.sh.
 sh run_train_eval.sh
