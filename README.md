@@ -1,7 +1,11 @@
 #  Structured Knowledge Distillation for Dense Prediction
 
-This repository contains the source code of our paper [Structured Knowledge Distillation for Dense Prediction].
-It is an extension of our paper [Structured Knowledge Distillation for Semantic Segmentation](https://arxiv.org/pdf/1903.04197.pdf) (accepted for publication in [CVPR'19](http://cvpr2019.thecvf.com/)).
+This repository contains the source code of our paper [Structured Knowledge Distillation for Dense Prediction](https://arxiv.org/pdf/1903.04197.pdf).
+It is an extension of our paper [Structured Knowledge Distillation for Semantic Segmentation](https://arxiv.org/pdf/1903.04197.pdf) (accepted for publication in [CVPR'19](http://cvpr2019.thecvf.com/), oral).
+
+We have update a more stable version of training the GAN part in the master branch.
+
+If you want to transfer our pair-wise distilaltion and pixel-wise distillation in your own work or you want to use our trained models in the conference version, you can checkout to the old branck 'cvpr_19'.
 
 ## Sample results
 
@@ -49,12 +53,20 @@ Note: Other chcekpoints can be obtained by email: yifan.liu04@adelaide.edu.au if
 
 ## Requirement
 python3.5 
+
 pytorch0.4.1 
+
 ninja 
+
 numpy 
+
 cv2 
+
 Pillow
-We recommend to use [Anaconda](https://conda.io/docs/user-guide/install/linux.html). We have tested our code on Ubuntu 16.04.
+
+We recommend to use [Anaconda](https://conda.io/docs/user-guide/install/linux.html).
+
+We have tested our code on Ubuntu 16.04.
 
 ## Quick start to test the model
 1. download the [Cityscape dataset](https://www.cityscapes-dataset.com/)
