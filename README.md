@@ -68,6 +68,18 @@ We recommend to use [Anaconda](https://conda.io/docs/user-guide/install/linux.ht
 
 We have tested our code on Ubuntu 16.04.
 
+### Compiling
+
+Some parts of InPlace-ABN have a native CUDA implementation, which must be compiled with the following commands:
+```bash
+cd libs
+sh build.sh
+python build.py
+``` 
+The `build.sh` script assumes that the `nvcc` compiler is available in the current system search path.
+The CUDA kernels are compiled for `sm_50`, `sm_52` and `sm_61` by default.
+To change this (_e.g._ if you are using a Kepler GPU), please edit the `CUDA_GENCODE` variable in `build.sh`.
+
 ## Quick start to test the model
 1. download the [Cityscape dataset](https://www.cityscapes-dataset.com/)
 2. sh run_test.sh [you should change the data-dir to your own]. By using our distilled student model, which can be gotten in [ckpt], an mIoU of 73.05 is achieved on the Cityscape test set, and 75.3 on validation set.
