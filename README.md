@@ -1,7 +1,7 @@
 #  Structured Knowledge Distillation for Dense Prediction
 
 This repository contains the source code of our paper [Structured Knowledge Distillation for Dense Prediction](https://arxiv.org/pdf/1903.04197.pdf).
-It is an extension of our paper [Structured Knowledge Distillation for Semantic Segmentation](https://arxiv.org/pdf/1903.04197.pdf) (accepted for publication in [CVPR'19](http://cvpr2019.thecvf.com/), oral).
+It is an extension of our paper [Structured Knowledge Distillation for Semantic Segmentation](https://www.zpascal.net/cvpr2019/Liu_Structured_Knowledge_Distillation_for_Semantic_Segmentation_CVPR_2019_paper.pdf) (accepted for publication in [CVPR'19](http://cvpr2019.thecvf.com/), oral).
 
 We have update a more stable version of training the GAN part in the master branch.
 
