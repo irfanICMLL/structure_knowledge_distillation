@@ -19,7 +19,6 @@ Before distillation with mIoU 57.8:
  
 ## Structure of this repository
 This repository is organized as:
-* [ckpt](/ckpt/) This directory contains the pretrained teacher model and a distilled student model.
 * [libs](/libs/) This directory contains the inplaceABNSync modes.
 * [dataset](/dataset/) This directory contains the dataloader for different datasets.
 * [network](/network/) This directory contains a model zoo for network models.
@@ -90,6 +89,8 @@ To change this (_e.g._ if you are using a Kepler GPU), please edit the `CUDA_GEN
 
 Note: Depth estimation task and object detection task can be test through the original projects of VNL and FCOS using our checkpoints.
 ## Train script
+Download the pre-trained [teacher weight](https://cloudstor.aarnet.edu.au/plus/s/tFjYfBJiarVi0pG):
+
 If you want to reproduce the ablation study in our paper, please modify is_pi_use/is_pa_use/is_ho_use in the run_train_eval.sh.
 sh run_train_eval.sh
 
