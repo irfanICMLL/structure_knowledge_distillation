@@ -98,3 +98,5 @@ sh run_train_eval.sh
 If you want to test your method on the cityscape test set, please modify the data-dir and resume-from path to your own, then run the test.sh and submit your results to www.cityscapes-dataset.net/submit/ 
 sh test.sh
 
+## License
+For academic use, this project is licensed under the 2-clause BSD License - see the LICENSE file for details. For commercial use, please contact [Yifan Liu](yifan.liu04@adelaide.edu.au) and [Chunhua Shen](chunhua.shen@adelaide.edu.au).
